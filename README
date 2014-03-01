@@ -1,0 +1,84 @@
+RemoteUI for Arduino UNO (R)
+Version 1.0 2013.02.22
+
+Copyright (C) 2013  Federico "MrModd" Cosentino (http://mrmodd.it/)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// -------------------------------------------------------------//
+
+RemoteUI is an interface for headless Linux servers.
+With a built-in display and a joystick, users can control the server
+without necessity of a keyboard, physical button on the computer
+or a remote connection (eg. SSH).
+This device is based on an Arduino UNO and uses the Adafruit 1.8"
+18-bit Color TFT Shield (you can find it here: http://www.adafruit.com/products/802 )
+combined with a Real Time Clock (DS1307) and a digital thermometer (DS18B20).
+I used the "Tiny RTC" board with the RTC and the thermometer, but every board
+with these two components should be ok.
+
+The RemoteUI is interfaced server-side with a Python script, controlled by a
+Linux daemon. When the device is powered on it downloads the list of operations
+allowed to execute on the server and shows them on the screen.
+With the built-in joystick the user can navigate through the menu and select the
+command to send to the server.
+
+--Compiling Arduino sketch
+
+Before start, you need some libraries that you have to install in the Arduino IDE.
+For the Adafruit display ST7735 and GFX libraries are required.
+You can download them from here:
+	https://github.com/adafruit/Adafruit-ST7735-Library
+	https://github.com/adafruit/Adafruit-GFX-Library
+For the DS1307 RTC you need this library:
+	https://github.com/turicas/DS1307/
+For the DS18B20 digital thermometer you need the OneWire library:
+	http://www.pjrc.com/teensy/td_libs_OneWire.html
+
+Since the Adafruit shield comes pre-assembled you shouldn't need to change the costants
+that define input and output pins. The RTC uses the I2C protocol, so have to use SDA
+and SCL pins. You can choice, instead, at wich digital I/O pin the thermometer is
+attached. For this you can change the constant "TEMP_SENS".
+
+Once you installed all the required libraries and you configured the I/O pins, you should
+be ready to upload the sketch to the Arduino and that's it!
+
+--Configuring the linux server
+
+In order to let the Arduino to communicate with the Linux server you need to install a
+Python script and two bash scripts.
+First of all you will need the inotify program. Under Debian you can install this with
+"apt-get install inotify-tools".
+Under the directory "Linux server" you can see three files: remoteui, remoteui.sh and
+remoteui.py.
+remoteui.sh is a loader for the Python server. It waits for the Arduino to be connected
+to the server and starts the Python script "remoteui.py". The "remoteui" file (without
+extension) is an init.d script and can be installed under Debian distribution to start
+the listener during the boot process.
+Be sure that the DEVICE variable under the remoteui.sh file respect the device file of
+your Arduino.
+You need to install remoteui.py and remoteui.sh under the directory /opt/remoteui and
+install the file remoteui in /etc/init.d directory.
+To enable the autostart you need to execute, as administrator, the command
+"update-rc.d remoteui defaults".
+You can disable the script with "update-rc.d remoteui remove".
+
+If you like to change what can be executed from the Arduino, you just need to modify
+the remoteui.py file.
+
+--Known bugs
+
+Due to the small amount of RAM of the Arduino, you may notice strange behaviour.
+In this case the problem should be that you used too long strings or too entries
+to pass from the remoteui.py script to the Arduino. Try to reduce them.
